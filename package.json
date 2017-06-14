@@ -1,0 +1,35 @@
+{
+  "name": "aileron",
+  "version": "1.0.0",
+  "description": "Smart url parsing router middleware for NodeJS",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "body-parser": "^1.17.2",
+    "chai": "^4.0.2",
+    "connect": "^3.6.2",
+    "eslint": "^3.12.2",
+    "quip": "^0.1.2",
+    "request": "^2.81.0"
+  },
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script/register --reporter list"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanjaypojo/rudder.git"
+  },
+  "keywords": [
+    "router",
+    "connect",
+    "NodeJS"
+  ],
+  "author": "Sanjay Guruprasad <sanjay@softrade.in> (http://sanjaypojo.com/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sanjaypojo/rudder/issues"
+  },
+  "homepage": "https://github.com/sanjaypojo/rudder#readme"
+}
