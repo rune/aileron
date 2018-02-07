@@ -5,26 +5,6 @@ const chai = require("chai")
 const router = require("../src/index")
 const should = chai.should()
 
-const url = require("url")
-const qs = require("querystring")
-const bodyParser = require("body-parser")
-
-let pr = {}
-
-// Automatically parse query string, pathname and attach to req object
-pr.url = (req, res, next) => {
-  let parsedUrl = url.parse(req.url)
-  req.query = qs.parse(parsedUrl.query)
-  req.pathName = parsedUrl.pathname.split("/")
-  next()
-}
-
-// Middleware to parse post requests into req.body
-pr.post = bodyParser.urlencoded({extended: false})
-
-// Middleware to parse JSON requests into req.body
-pr.json = bodyParser.json({limit: "5mb"})
-
 // Create a temporary server for tests
 let testServer = connect()
 
@@ -130,9 +110,6 @@ const errorController = {
 
 let runningServer = testServer
   .use(quip)
-  .use(pr.url)
-  .use(pr.post)
-  .use(pr.json)
   .use(router("/cow/:id/abc", controller1))
   .use(router("/app/assessments/:id", passthrough))
   .use(router("/app/assessments/:id/respondents/:id/questionnaire", errorController))

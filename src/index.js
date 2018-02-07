@@ -1,9 +1,19 @@
+const urlParser = require("url")
+
 let removeTrailingSlash = (urlArray) => {
   if (urlArray[urlArray.length - 1] == "") {
     return urlArray.slice(0,-1)
   } else {
     return urlArray
   }
+}
+
+let processUrl = (url) => {
+  return(
+    removeTrailingSlash(
+      urlParser.parse(url).pathname.split("/")
+    )
+  )
 }
 
 
@@ -38,22 +48,22 @@ let router = (url, controller, strict = false) => {
     let match = true
     let data = {}
 
-    req.pathName = removeTrailingSlash(req.pathName)
+    let cleanPathName = processUrl(req.url)
 
-    if (strict && req.pathName.length != parsedUrl.length) {
+    if (strict && cleanPathName.length != parsedUrl.length) {
       // Check for an exact match in strict mode
       next()
       return
-    } else if (req.pathName.length != parsedUrl.length) {
+    } else if (cleanPathName.length != parsedUrl.length) {
       // Check for an almost exact match otherwise (missing id allowed)
-      if (!(parsedUrl[parsedUrl.length - 1].type == "id" && req.pathName.length == parsedUrl.length - 1)) {
+      if (!(parsedUrl[parsedUrl.length - 1].type == "id" && cleanPathName.length == parsedUrl.length - 1)) {
         next()
         return
       }
     }
 
     let index = 0
-    for (let item of req.pathName) {
+    for (let item of cleanPathName) {
       if (item == "") {
         // Do nothing
       }
