@@ -128,7 +128,7 @@ const errorController = {
   }
 }
 
-testServer
+let runningServer = testServer
   .use(quip)
   .use(pr.url)
   .use(pr.post)
@@ -143,11 +143,16 @@ testServer
   .use(router("/strict", strictModeController))
   .use(router("/strict/:id", strictModeController2, true))
   .use((req, res, next) => res.notFound("Help"))
-  .listen(3020)
+  .listen(3022)
 
 let reqHost = "http://localhost:3020"
 
 describe ("Router", () => {
+
+  after(() => {
+    runningServer.close()
+  })
+
   it("should handle get requests if supported", (done) => {
     request
       .get(`${reqHost}/cow/12/complex/23`, (err, response, body) => {
@@ -230,7 +235,6 @@ describe ("Router", () => {
       })
   })
   it("should send a 404 if the request method is not supported", (done) => {
-    this.timeout(10000)
     request
       .patch(`${reqHost}/cow/15/abc`, (err, response, body) => {
         response.statusCode.should.equal(404)
