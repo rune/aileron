@@ -1,36 +1,37 @@
 {
   "name": "aileron",
   "version": "1.3.0",
-  "description": "Smart url parsing router middleware for NodeJS",
+  "description": "Minimal URL matching for NodeJS",
   "main": "src/index.js",
   "directories": {
     "test": "test"
   },
   "devDependencies": {
-    "body-parser": "^1.17.2",
-    "chai": "^4.0.2",
+    "body-parser": "^1.18.2",
+    "chai": "^4.1.2",
     "connect": "^3.6.5",
-    "eslint": "^3.12.2",
+    "eslint": "^4.17.0",
     "mocha": "^5.0.0",
     "quip": "^0.1.2",
-    "request": "^2.81.0"
+    "request": "^2.83.0"
   },
   "scripts": {
     "test": "mocha --reporter spec"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sanjaypojo/rudder.git"
+    "url": "git+https://github.com/sanjaypojo/aileron.git"
   },
   "keywords": [
     "router",
     "connect",
     "NodeJS"
   ],
-  "author": "Sanjay Guruprasad <sanjay@softrade.in> (http://sanjaypojo.com/)",
+  "author": "Sanjay Guruprasad <sanjayg@mit.edu> (http://sanjaypojo.com/)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sanjaypojo/rudder/issues"
+    "url": "https://github.com/sanjaypojo/aileron/issues"
   },
-  "homepage": "https://github.com/sanjaypojo/rudder#readme"
+  "homepage": "https://github.com/sanjaypojo/aileron#readme",
+  "dependencies": {}
 }
