@@ -1,5 +1,7 @@
 # Aileron
 
+[![Build Status](https://travis-ci.org/sanjaypojo/aileron.svg?branch=master)](https://travis-ci.org/sanjaypojo/aileron)
+
 Tiny (<100 SLOC) and minimal URL parsing for NodeJS. Designed as a middleware for connect. Matches URLs to paths, supports wildcards (useful for IDs in REST APIs) and specifies request types for an endpoint (GET, POST, PUT, PATCH, DELETE). I use this extensively when creating API servers.
 
 ## Typical Use
