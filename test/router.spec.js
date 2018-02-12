@@ -120,9 +120,9 @@ let runningServer = testServer
   .use(router("/strict", strictModeController))
   .use(router("/strict/:id", strictModeController2, true))
   .use((req, res, next) => res.notFound("Help"))
-  .listen(3022)
+  .listen(3000)
 
-let reqHost = "http://localhost:3020"
+let reqHost = "http://localhost:3000"
 
 describe ("Router", () => {
 
