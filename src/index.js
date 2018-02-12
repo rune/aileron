@@ -47,7 +47,6 @@ let router = (url, controller, strict = false) => {
   let routerMiddleware = (req, res, next) => {
     let match = true
     let data = {}
-
     let cleanPathName = processUrl(req.url)
 
     if (strict && cleanPathName.length != parsedUrl.length) {
@@ -64,9 +63,7 @@ let router = (url, controller, strict = false) => {
 
     let index = 0
     for (let item of cleanPathName) {
-      if (item == "") {
-        // Do nothing
-      }
+      if (item == "") { /* Do nothing */}
       else if (!parsedUrl[index]) {
         match = false
         next()
@@ -99,6 +96,5 @@ let router = (url, controller, strict = false) => {
 
   return routerMiddleware
 }
-
 
 module.exports = router
