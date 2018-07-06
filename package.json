@@ -3,6 +3,7 @@
   "version": "1.5.0",
   "description": "Minimal URL matching for NodeJS",
   "main": "src/index.js",
+  "files": ["src/*"],
   "directories": {
     "test": "test"
   },
