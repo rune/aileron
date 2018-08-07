@@ -11,21 +11,21 @@ let testServer = connect()
 const controller1 = {
   get: (req, res, next, data) => {
     console.log("controller1")
-    res.json({cowId: parseInt(data.cow.id)})
+    res.json({cowId: parseInt(data.cowId)})
   }
 }
 
 const controller2 = {
   get: (req, res, next, data) => {
     console.log("controller2")
-    if (data.complex && data.complex.id) {
+    if (data.complexId) {
       res.ok().json({
-        cowId: parseInt(data.cow.id),
-        complexId: parseInt(data.complex.id)
+        cowId: parseInt(data.cowId),
+        complexId: parseInt(data.complexId)
       })
     } else {
       res.ok().json({
-        cowId: parseInt(data.cow.id),
+        cowId: parseInt(data.cowId),
         complexId: 365
       })
     }
@@ -33,29 +33,29 @@ const controller2 = {
   post: (req, res, next, data) => {
     console.log("controller2")
     res.ok().json({
-      cowId: parseInt(data.cow.id),
-      complexId: parseInt(data.complex.id) + 1
+      cowId: parseInt(data.cowId),
+      complexId: parseInt(data.complexId) + 1
     })
   },
   patch: (req, res, next, data) => {
     console.log("controller2")
     res.ok().json({
-      cowId: parseInt(data.cow.id),
-      complexId: parseInt(data.complex.id) + 2
+      cowId: parseInt(data.cowId),
+      complexId: parseInt(data.complexId) + 2
     })
   },
   put: (req, res, next, data) => {
     console.log("controller2")
     res.ok().json({
-      cowId: parseInt(data.cow.id),
-      complexId: parseInt(data.complex.id) + 3
+      cowId: parseInt(data.cowId),
+      complexId: parseInt(data.complexId) + 3
     })
   },
   delete: (req, res, next, data) => {
     console.log("controller2")
     res.ok().json({
-      cowId: parseInt(data.cow.id),
-      complexId: parseInt(data.complex.id) + 4
+      cowId: parseInt(data.cowId),
+      complexId: parseInt(data.complexId) + 4
     })
   }
 }
@@ -64,8 +64,8 @@ const controller3 = {
   patch: (req, res, next, data) => {
     console.log("controller3")
     res.ok().json({
-      monkeyCode: data.monkey.code,
-      complexId: parseInt(data.complex.id) + 4
+      monkeyCode: data.monkeyCode,
+      complexId: parseInt(data.complexId) + 4
     })
   }
 }
@@ -74,8 +74,8 @@ const controller4 = {
   patch: (req, res, next, data) => {
     console.log("controller4")
     res.ok().json({
-      monkeyCode: data.monkey.code,
-      complexId: parseInt(data.complex.id) + 6
+      monkeyCode: data.monkeyCode,
+      complexId: parseInt(data.complexId) + 6
     })
   }
 }
@@ -96,7 +96,7 @@ const strictModeController = {
 
 const strictModeController2 = {
   get: (req, res, next, data) => {
-    console.log("If you see this, it passed through `/strict/:id` which is BAD")
+    console.log("If you see this, it passed through `/strict/:strictId` which is BAD")
     res.ok().json({strictId: parseInt(data.strict.id)})
   }
 }
@@ -104,25 +104,25 @@ const strictModeController2 = {
 const errorController = {
   get: (req, res, next, data) => {
     console.log("errorController")
-    res.ok().json({assessmentId: data.assessments.id})
+    res.ok().json({assessmentId: data.assessmentId})
   }
 }
 
 let runningServer = testServer
   .use(quip)
-  .use(router("/cow/:id/abc", controller1))
-  .use(router("/app/assessments/:id", passthrough))
-  .use(router("/app/assessments/:id/respondents/:id/questionnaire", errorController))
-  .use(router("/monkey/:code/complex/:id", controller3))
-  .use(router("/cow/:id/complex/:id", controller2))
-  .use(router("/monkey/:code/complex/:id/abc", controller4))
-  .use(router("/cow/:id/def/", controller1))
+  .use(router("/cow/:cowId/abc", controller1))
+  .use(router("/app/assessments/:assessmentId", passthrough))
+  .use(router("/app/assessments/:assessmentId/respondents/:respondentId/questionnaire", errorController))
+  .use(router("/monkey/:monkeyCode/complex/:complexId", controller3))
+  .use(router("/cow/:cowId/complex/:complexId", controller2))
+  .use(router("/monkey/:monkeyCode/complex/:complexId/abc", controller4))
+  .use(router("/cow/:cowId/def/", controller1))
   .use(router("/strict", strictModeController))
-  .use(router("/strict/:id", strictModeController2, true))
+  .use(router("/strict/:strictId", strictModeController2, true))
   .use((req, res, next) => res.notFound("Help"))
-  .listen(3000)
+  .listen(3003)
 
-let reqHost = "http://localhost:3000"
+let reqHost = "http://localhost:3003"
 
 describe ("Router", () => {
 

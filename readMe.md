@@ -13,16 +13,16 @@ const queryDb = require("magical-db-query-lib")
 let app = connect()
 
 app
-  .use(router("/team/:id", {
-    get: (req, res, next, urlData) => {
-      if (urlData.team.id) {
-        res.send(teamDetails(urlData.team.id))
+  .use(router("/team/:teamId", {
+    get: (req, res, next, data) => {
+      if (data.teamId) {
+        res.send(teamDetails(data.teamId))
       } else {
         res.send(teamList())
       }
     },
-    put: (req, res, next, urlData) => {
-      updateTeamDetails(urlData.team.id, (err, result) => {
+    put: (req, res, next, data) => {
+      updateTeamDetails(data.teamId, (err, result) => {
         if (err) {
           // Add error headers and stuff
           res.send(err)

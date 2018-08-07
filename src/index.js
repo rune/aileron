@@ -73,8 +73,7 @@ let router = (url, controller, strict = false) => {
         next()
         return
       } else if (parsedUrl[index].type == "id") {
-        data[parsedUrl[index-1].name] = {}
-        data[parsedUrl[index-1].name][parsedUrl[index].name] = item
+        data[parsedUrl[index].name] = item
       }
       index += 1
     }
