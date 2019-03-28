@@ -1,42 +1,36 @@
 const urlParser = require("url")
 
-let removeTrailingSlash = (urlArray) => {
+const removeTrailingSlash = urlArray => {
   if (urlArray[urlArray.length - 1] == "") {
-    return urlArray.slice(0,-1)
+    return urlArray.slice(0, -1)
   } else {
     return urlArray
   }
 }
 
-let processUrl = (url) => {
-  return(
-    removeTrailingSlash(
-      urlParser.parse(url).pathname.split("/")
-    )
-  )
+const processUrl = url => {
+  return removeTrailingSlash(urlParser.parse(url).pathname.split("/"))
 }
 
+const processUrlFormat = urlFormat => {
+  let parsedUrlFormat = []
 
-let router = (url, controller, strict = false) => {
-  url = url.split("/")
-  let parsedUrl = []
-
-  url = removeTrailingSlash(url)
+  const urlFormatArray = removeTrailingSlash(urlFormat.split("/"))
 
   let index = 0
-  for (let item of url) {
-    if (item.substring(0,1) == ":") {
-      parsedUrl[index] = {
+  for (let item of urlFormatArray) {
+    if (item.substring(0, 1) == ":") {
+      parsedUrlFormat[index] = {
         type: "id",
         name: item.substring(1)
       }
     } else if (item == "") {
-      parsedUrl[index] = {
+      parsedUrlFormat[index] = {
         type: "blank",
         name: item
       }
     } else {
-      parsedUrl[index] = {
+      parsedUrlFormat[index] = {
         type: "resource",
         name: item
       }
@@ -44,36 +38,50 @@ let router = (url, controller, strict = false) => {
     index += 1
   }
 
+  return parsedUrlFormat
+}
+
+const router = (urlFormat, controller, strict = false) => {
+  const parsedUrlFormat = processUrlFormat(urlFormat)
   let routerMiddleware = (req, res, next) => {
     let match = true
     let data = {}
-    let cleanPathName = processUrl(req.url)
+    const cleanUrlArray = processUrl(req.url)
 
-    if (strict && cleanPathName.length != parsedUrl.length) {
+    if (strict && cleanUrlArray.length != parsedUrlFormat.length) {
       // Check for an exact match in strict mode
       next()
       return
-    } else if (cleanPathName.length != parsedUrl.length) {
+    } else if (cleanUrlArray.length != parsedUrlFormat.length) {
       // Check for an almost exact match otherwise (missing id allowed)
-      if (!(parsedUrl[parsedUrl.length - 1].type == "id" && cleanPathName.length == parsedUrl.length - 1)) {
+      if (
+        !(
+          parsedUrlFormat[parsedUrlFormat.length - 1].type == "id" &&
+          cleanUrlArray.length == parsedUrlFormat.length - 1
+        )
+      ) {
         next()
         return
       }
     }
 
     let index = 0
-    for (let item of cleanPathName) {
-      if (item == "") { /* Do nothing */}
-      else if (!parsedUrl[index]) {
+    for (let item of cleanUrlArray) {
+      if (item == "") {
+        /* Do nothing */
+      } else if (!parsedUrlFormat[index]) {
         match = false
         next()
         return
-      } else if (parsedUrl[index].type == "resource" && item != parsedUrl[index].name) {
+      } else if (
+        parsedUrlFormat[index].type == "resource" &&
+        item != parsedUrlFormat[index].name
+      ) {
         match = false
         next()
         return
-      } else if (parsedUrl[index].type == "id") {
-        data[parsedUrl[index].name] = item
+      } else if (parsedUrlFormat[index].type == "id") {
+        data[parsedUrlFormat[index].name] = item
       }
       index += 1
     }
@@ -96,4 +104,54 @@ let router = (url, controller, strict = false) => {
   return routerMiddleware
 }
 
-module.exports = router
+// Middleware that can process wildcards
+const middleware = (urlFormat, middlewareFunction) => {
+  const parsedUrlFormat = processUrlFormat(urlFormat)
+
+  let routerMiddleware = (req, res, next) => {
+    let data = {}
+    const cleanUrlArray = processUrl(req.url)
+
+    if (cleanUrlArray.length < parsedUrlFormat.length) {
+      // Url cannot be shorter than the url format, except for an optional id
+      // The one corner case is that it is shorter by exactly 1 unit (the optional id)
+      if (
+        !(
+          parsedUrlFormat[parsedUrlFormat.length - 1].type === "id" &&
+          cleanUrlArray.length === parsedUrlFormat.length - 1
+        )
+      ) {
+        next()
+        return
+      }
+    }
+
+    let index = 0
+    for (let item of cleanUrlArray) {
+      if (index > parsedUrlFormat.length - 1) {
+        // Only check the part of the URL in the url format
+        break
+      }
+      if (item == "") {
+        /* Do nothing */
+      } else if (
+        parsedUrlFormat[index].type === "resource" &&
+        item !== parsedUrlFormat[index].name
+      ) {
+        next()
+        return
+      } else if (parsedUrlFormat[index].type === "id") {
+        data[parsedUrlFormat[index].name] = item
+      }
+      index += 1
+    }
+
+    middlewareFunction(req, res, next, data)
+  }
+
+  return routerMiddleware
+}
+
+exports.middleware = middleware
+
+exports.router = router
