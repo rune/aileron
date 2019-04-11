@@ -11,47 +11,53 @@ Tiny (~150 SLOC) and minimal URL parsing for NodeJS. Designed as a middleware fo
 ## Typical Use
 
 ```javascript
-const connect = require("connect")
-const { router, middleware } = require("aileron")
-const queryDb = require("magical-db-query-lib")
+const connect = require("connect");
+const aileron = require("aileron");
+const queryDb = require("magical-db-query-lib");
+
+const { router, middleware } = aileron();
 
 const teamApi = {
-  get: (req, res, next, data) => {
-    if (data.teamId) {
-      res.send(teamDetails(data.teamId))
-    } else {
-      res.send(teamList())
+  get: {
+    handler: (req, res, next, data) => {
+      if (data.teamId) {
+        res.send(teamDetails(data.teamId));
+      } else {
+        res.send(teamList());
+      }
     }
   },
-  put: async (req, res, next, data) => {
-    try {
-      const result = await updateTeamDetails(data.teamId)
-      res.send(result)
-    } catch (err) {
-      res.send(err)
+  put: {
+    handler: async (req, res, next, data) => {
+      try {
+        const result = await updateTeamDetails(data.teamId);
+        res.send(result);
+      } catch (err) {
+        res.send(err);
+      }
     }
   }
-}
+};
 
 const authMiddleware = (req, res, next, data) => {
   if (isAuthorized(req)) {
-    next()
+    next();
   } else {
-    res.send("Unauthorized")
+    res.send("Unauthorized");
   }
-}
+};
 
-let app = connect()
+let app = connect();
 
 app
   .use(middleware("/api/:apiVersion"), authMiddleware)
-  .use(router("/api/:apiVersion/team/:teamId", teamApi))
+  .use(router("/api/:apiVersion/team/:teamId", teamApi));
 ```
 
 ## Middleware
 
 ```javascript
-middleware(urlFormat, middlewareFunction)
+middleware(urlFormat, middlewareFunction);
 ```
 
 - `urlFormat` is a string URL, where you can have `:wildcard` placeholders by prefixing a `:`
@@ -82,7 +88,7 @@ app
 ## Router
 
 ```javascript
-router(urlFormat, routerObject)
+router(urlFormat, routerObject);
 ```
 
 - `urlFormat` is a string URL, where you can have `:wildcard` placeholders by prefixing a `:`
@@ -96,32 +102,36 @@ For example:
 
 ```javascript
 const teamApi = {
-  get: (req, res, next, data) => {
-    if (data.teamId) {
-      res.send(teamDetails(data.teamId))
-    } else {
-      res.send(teamList())
+  get: {
+    handler: (req, res, next, data) => {
+      if (data.teamId) {
+        res.send(teamDetails(data.teamId));
+      } else {
+        res.send(teamList());
+      }
     }
   },
-  put: async (req, res, next, data) => {
-    try {
-      const result = await updateTeamDetails(data.teamId)
-      res.send(result)
-    } catch (err) {
-      res.send(err)
+  put: {
+    handler: async (req, res, next, data) => {
+      try {
+        const result = await updateTeamDetails(data.teamId);
+        res.send(result);
+      } catch (err) {
+        res.send(err);
+      }
     }
   }
-}
+};
 
 let app = connect()
 
 app
-  // Other routes and middlewares
+  // Other routes and middleware
   .use(...)
   .use(...)
   // The team route
   .use(router("/api/:apiVersion/team/:teamId", teamApi))
-  // Other routes and middlewares
+  // Other routes and middleware
   .use(...)
   .use(...)
 ```
