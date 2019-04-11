@@ -10,16 +10,16 @@
     "test": "test"
   },
   "devDependencies": {
-    "body-parser": "^1.18.3",
-    "chai": "^4.1.2",
-    "connect": "^3.6.6",
-    "eslint": "^4.19.1",
-    "mocha": "^5.2.0",
-    "quip": "^0.1.2",
-    "request": "^2.87.0"
+    "body-parser": "1.18.3",
+    "chai": "4.2.0",
+    "connect": "3.6.6",
+    "eslint": "5.16.0",
+    "mocha": "6.1.2",
+    "quip": "0.1.2",
+    "request": "2.88.0"
   },
   "scripts": {
-    "test": "mocha --reporter spec"
+    "test": "NODE_ENV=test mocha --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -36,5 +36,7 @@
     "url": "https://github.com/sanjaypojo/aileron/issues"
   },
   "homepage": "https://github.com/sanjaypojo/aileron#readme",
-  "dependencies": {}
+  "dependencies": {
+    "type-check": "^0.3.2"
+  }
 }
