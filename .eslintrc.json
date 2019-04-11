@@ -1,9 +1,11 @@
 {
   "env": {
     "es6": true,
-    "node": true
+    "node": true,
+    "mocha": true
   },
   "extends": "eslint:recommended",
+  "plugins": ["mocha"],
   "parserOptions": {
     "sourceType": "module"
   },
@@ -11,6 +13,8 @@
     "indent": ["error", 2],
     "linebreak-style": ["error", "unix"],
     "quotes": ["error", "double"],
-    "semi": ["error", "never"]
+    "semi": ["error", "never"],
+    "max-len": ["warn", { "code": 90, "ignoreStrings": true }],
+    "no-unused-vars": ["error", { "args": "none" }]
   }
 }
