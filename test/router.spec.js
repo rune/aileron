@@ -2,101 +2,125 @@ const connect = require("connect")
 const request = require("request")
 const quip = require("quip")
 const chai = require("chai")
-const { router, middleware } = require("../src/index")
+const aileron = require("../src/index")
 const should = chai.should()
+
+const { router, middleware } = aileron()
 
 // Create a temporary server for tests
 let testServer = connect()
 
 const controller1 = {
-  get: (req, res, next, data) => {
-    res.json({ cowId: parseInt(data.cowId) })
+  get: {
+    handler: (req, res, next, data) => {
+      res.json({ cowId: parseInt(data.cowId) })
+    }
   }
 }
 
 const controller2 = {
-  get: (req, res, next, data) => {
-    if (data.complexId) {
+  get: {
+    handler: (req, res, next, data) => {
+      if (data.complexId) {
+        res.ok().json({
+          cowId: parseInt(data.cowId),
+          complexId: parseInt(data.complexId)
+        })
+      } else {
+        res.ok().json({
+          cowId: parseInt(data.cowId),
+          complexId: 365
+        })
+      }
+    }
+  },
+  post: {
+    handler: (req, res, next, data) => {
       res.ok().json({
         cowId: parseInt(data.cowId),
-        complexId: parseInt(data.complexId)
-      })
-    } else {
-      res.ok().json({
-        cowId: parseInt(data.cowId),
-        complexId: 365
+        complexId: parseInt(data.complexId) + 1
       })
     }
   },
-  post: (req, res, next, data) => {
-    res.ok().json({
-      cowId: parseInt(data.cowId),
-      complexId: parseInt(data.complexId) + 1
-    })
+  patch: {
+    handler: (req, res, next, data) => {
+      res.ok().json({
+        cowId: parseInt(data.cowId),
+        complexId: parseInt(data.complexId) + 2
+      })
+    }
   },
-  patch: (req, res, next, data) => {
-    res.ok().json({
-      cowId: parseInt(data.cowId),
-      complexId: parseInt(data.complexId) + 2
-    })
+  put: {
+    handler: (req, res, next, data) => {
+      res.ok().json({
+        cowId: parseInt(data.cowId),
+        complexId: parseInt(data.complexId) + 3
+      })
+    }
   },
-  put: (req, res, next, data) => {
-    res.ok().json({
-      cowId: parseInt(data.cowId),
-      complexId: parseInt(data.complexId) + 3
-    })
-  },
-  delete: (req, res, next, data) => {
-    res.ok().json({
-      cowId: parseInt(data.cowId),
-      complexId: parseInt(data.complexId) + 4
-    })
+  delete: {
+    handler: (req, res, next, data) => {
+      res.ok().json({
+        cowId: parseInt(data.cowId),
+        complexId: parseInt(data.complexId) + 4
+      })
+    }
   }
 }
 
 const controller3 = {
-  patch: (req, res, next, data) => {
-    res.ok().json({
-      monkeyCode: data.monkeyCode,
-      complexId: parseInt(data.complexId) + 4
-    })
+  patch: {
+    handler: (req, res, next, data) => {
+      res.ok().json({
+        monkeyCode: data.monkeyCode,
+        complexId: parseInt(data.complexId) + 4
+      })
+    }
   }
 }
 
 const controller4 = {
-  patch: (req, res, next, data) => {
-    res.ok().json({
-      monkeyCode: data.monkeyCode,
-      complexId: parseInt(data.complexId) + 6
-    })
+  patch: {
+    handler: (req, res, next, data) => {
+      res.ok().json({
+        monkeyCode: data.monkeyCode,
+        complexId: parseInt(data.complexId) + 6
+      })
+    }
   }
 }
 
 const passthrough = {
-  get: (req, res, next, data) => {
-    next()
+  get: {
+    handler: (req, res, next, data) => {
+      next()
+    }
   }
 }
 
 const strictModeController = {
-  get: (req, res, next, data) => {
-    console.log("If you see this, it passed through `/strict` which is NORMAL")
-    next()
+  get: {
+    handler: (req, res, next, data) => {
+      console.log("If you see this, it passed through `/strict` which is NORMAL")
+      next()
+    }
   }
 }
 
 const strictModeController2 = {
-  get: (req, res, next, data) => {
-    console.log(
-      "If you see this, it passed through `/strict/:strictId` which is BAD"
-    )
-    res.ok().json({ strictId: parseInt(data.strictId) })
+  get: {
+    handler: (req, res, next, data) => {
+      console.log("If you see this, it passed through `/strict/:strictId` which is BAD")
+      res.ok().json({ strictId: parseInt(data.strictId) })
+    }
   }
 }
 
 const errorController = {
-  get: (req, res, next, data) => {
-    res.ok().json({ assessmentId: data.assessmentId })
+  get: {
+    handler: (req, res, next, data) => {
+      res.ok().json({ assessmentId: data.assessmentId })
+    }
   }
 }
 
@@ -216,15 +240,12 @@ describe("Router and Middleware Tests", () => {
       })
     })
     it("should handle string IDs", done => {
-      request.patch(
-        `${reqHost}/monkey/all/complex/27`,
-        (err, response, body) => {
-          let data = JSON.parse(body)
-          data.monkeyCode.should.equal("all")
-          data.complexId.should.equal(31)
-          done()
-        }
-      )
+      request.patch(`${reqHost}/monkey/all/complex/27`, (err, response, body) => {
+        let data = JSON.parse(body)
+        data.monkeyCode.should.equal("all")
+        data.complexId.should.equal(31)
+        done()
+      })
     })
     it("should not match subset urls", done => {
       request.get(`${reqHost}/app/assessments/13`, (err, response, body) => {
@@ -233,36 +254,27 @@ describe("Router and Middleware Tests", () => {
       })
     })
     it("should pass forward superset urls", done => {
-      request.patch(
-        `${reqHost}/monkey/123/complex/27/abc`,
-        (err, response, body) => {
-          let data = JSON.parse(body)
-          data.monkeyCode.should.equal("123")
-          data.complexId.should.equal(33)
-          done()
-        }
-      )
+      request.patch(`${reqHost}/monkey/123/complex/27/abc`, (err, response, body) => {
+        let data = JSON.parse(body)
+        data.monkeyCode.should.equal("123")
+        data.complexId.should.equal(33)
+        done()
+      })
     })
     it("should ignore unmatched superset urls", done => {
-      request.get(
-        `${reqHost}/cow/12/complex/12/divi/12`,
-        (err, response, body) => {
-          response.statusCode.should.equal(404)
-          done()
-        }
-      )
+      request.get(`${reqHost}/cow/12/complex/12/divi/12`, (err, response, body) => {
+        response.statusCode.should.equal(404)
+        done()
+      })
     })
     it("should handle trailing slashes correctly", done => {
-      request.patch(
-        `${reqHost}/monkey/all/complex/27/`,
-        (err, response, body) => {
-          response.statusCode.should.equal(200)
-          let data = JSON.parse(body)
-          data.monkeyCode.should.equal("all")
-          data.complexId.should.equal(31)
-          done()
-        }
-      )
+      request.patch(`${reqHost}/monkey/all/complex/27/`, (err, response, body) => {
+        response.statusCode.should.equal(200)
+        let data = JSON.parse(body)
+        data.monkeyCode.should.equal("all")
+        data.complexId.should.equal(31)
+        done()
+      })
     })
     it("should not accept subset URLs without id in strict mode", done => {
       request.get(`${reqHost}/strict`, (err, response, body) => {
@@ -296,15 +308,12 @@ describe("Router and Middleware Tests", () => {
       )
     })
     it("should work for partial matches with missing ID at the end", done => {
-      request.post(
-        `${reqHost}/middleware/77/middleware2`,
-        (err, response, body) => {
-          response.statusCode.should.equal(200)
-          const data = JSON.parse(body)
-          should.not.exist(data.optionalCode)
-          done()
-        }
-      )
+      request.post(`${reqHost}/middleware/77/middleware2`, (err, response, body) => {
+        response.statusCode.should.equal(200)
+        const data = JSON.parse(body)
+        should.not.exist(data.optionalCode)
+        done()
+      })
     })
   })
 })

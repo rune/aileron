@@ -2,6 +2,7 @@ const removeTrailingSlash = require("./removeTrailingSlash")
 
 const processUrlFormat = urlFormat => {
   let parsedUrlFormat = []
+  let urlDataKeys = []
 
   const urlFormatArray = removeTrailingSlash(urlFormat.split("/"))
 
@@ -12,6 +13,7 @@ const processUrlFormat = urlFormat => {
         type: "id",
         name: item.substring(1)
       }
+      urlDataKeys.push(item.substring(1))
     } else if (item == "") {
       parsedUrlFormat[index] = {
         type: "blank",
@@ -26,7 +28,7 @@ const processUrlFormat = urlFormat => {
     index += 1
   }
 
-  return parsedUrlFormat
+  return { parsedUrlFormat, urlDataKeys }
 }
 
 module.exports = processUrlFormat

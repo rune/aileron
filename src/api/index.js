@@ -1,7 +1,7 @@
-const router = require("./router")
-const middleware = require("./middleware")
+const routerGenerator = require("./routerGenerator")
+const middlewareGenerator = require("./middlewareGenerator")
 
 module.exports = {
-  router,
-  middleware
+  routerGenerator,
+  middlewareGenerator
 }
