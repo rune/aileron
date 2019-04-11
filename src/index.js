@@ -7,9 +7,10 @@ module.exports = ({ badInputHandler, serverErrorHandler, strict } = {}) => {
     }
   } else {
     strict = false
-    badInputHandler = (req, res, inputErrors, errorMsg) => {
+    // Reduce to single function with error code
+    badInputHandler = (req, res, inputError, errMsg) => {
       res.writeHead(400, { "Content-Type": "application/json" })
-      res.end(JSON.stringify({ err: inputErrors, message: errorMsg }))
+      res.end(JSON.stringify({ err: inputError, message: errMsg }))
     }
     serverErrorHandler = (req, res, err, errorMsg) => {
       res.writeHead(500, { "Content-Type": "application/json" })

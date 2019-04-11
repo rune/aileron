@@ -5,7 +5,6 @@
     "mocha": true
   },
   "extends": "eslint:recommended",
-  "plugins": ["mocha"],
   "parserOptions": {
     "sourceType": "module"
   },
