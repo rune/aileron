@@ -1,3 +1,5 @@
+const validateTypes = require("./validateTypes")
+
 module.exports = (urlFormat, urlDataKeys, controller, aileronStrict) => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
     for (const method in controller) {
@@ -7,20 +9,18 @@ module.exports = (urlFormat, urlDataKeys, controller, aileronStrict) => {
       const allKeys = urlDataKeys.concat(inputKeys)
       const distinctKeys = new Set(allKeys)
       if (allKeys.length !== distinctKeys.size) {
-        throw `Incorrect controller configuration for ${urlFormat}.${method}.
-          URL codes and request body inputs must all be unique`
+        throw `Aileron controller config error: ${urlFormat}.${method}.
+          URL wildcards and request body inputs must all be unique`
       }
       // Handler must be supplied
-      let controllerRequirements = ["handler"]
+      let controllerDefinition = { handler: "Function" }
       // If strict mode is enabled, inputs and error messages must also be supplied
       if (aileronStrict) {
-        controllerRequirements = ["inputs", "handler", "errorMsg"]
+        controllerDefinition = { handler: "Function", inputs: "Object", errMsg: "String" }
       }
-      for (const key of controllerRequirements) {
-        if (!sub[key]) {
-          throw `Incorrect controller configuration for ${urlFormat}.${method}.
-            "${key}" is not defined.`
-        }
+      const { inputErr } = validateTypes(controllerDefinition, sub)
+      if (inputErr) {
+        throw `Aileron controller config error: ${urlFormat}.${method}. ${inputErr.msg}`
       }
     }
   }
