@@ -1,8 +1,8 @@
-const validateInputTypes = require("./validateInputTypes")
+const validateTypes = require("./validateTypes")
 
 const runController = (
   controller,
-  { badInputHandler, serverErrorHandler },
+  { errHandler, badInputHandler },
   req,
   res,
   next,
@@ -16,23 +16,23 @@ const runController = (
     return
   }
 
-  const { handler, inputs, errorMsg } = controller[requestMethod]
+  const { handler, inputs, errMsg } = controller[requestMethod]
 
   try {
     if (inputs) {
-      const { receivedInputs, inputErrors } = validateInputTypes(inputs, req.body)
-      if (inputErrors) {
-        badInputHandler(req, res, inputErrors, errorMsg)
+      const { parsedInputs, inputErr } = validateTypes(inputs, req.body)
+      if (inputErr) {
+        badInputHandler(req, res, inputErr, errMsg)
         return
       } else {
-        for (const key in receivedInputs) {
-          data[key] = receivedInputs[key]
+        for (const key in parsedInputs) {
+          data[key] = parsedInputs[key]
         }
       }
     }
     handler(req, res, next, data)
   } catch (err) {
-    serverErrorHandler(req, res, err, errorMsg)
+    errHandler(req, res, err, errMsg)
   }
 }
 
