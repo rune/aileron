@@ -1,17 +1,25 @@
 const connect = require("connect")
 const request = require("request")
+const bodyParser = require("body-parser")
 const quip = require("quip")
 const chai = require("chai")
 const aileron = require("../src/index")
 const should = chai.should()
 
-const { router, middleware } = aileron()
+const { router, middleware } = aileron({
+  strict: true,
+  badInputHandler: (req, res, err, errMsg) =>
+    res.forbidden().json({ err, message: errMsg }),
+  errHandler: (req, res, err, errMsg) => res.error().json({ err, message: "Yo" })
+})
 
 // Create a temporary server for tests
 let testServer = connect()
 
 const controller1 = {
   get: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.json({ cowId: parseInt(data.cowId) })
     }
@@ -20,6 +28,8 @@ const controller1 = {
 
 const controller2 = {
   get: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       if (data.complexId) {
         res.ok().json({
@@ -35,6 +45,8 @@ const controller2 = {
     }
   },
   post: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.ok().json({
         cowId: parseInt(data.cowId),
@@ -43,6 +55,8 @@ const controller2 = {
     }
   },
   patch: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.ok().json({
         cowId: parseInt(data.cowId),
@@ -51,6 +65,8 @@ const controller2 = {
     }
   },
   put: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.ok().json({
         cowId: parseInt(data.cowId),
@@ -59,6 +75,8 @@ const controller2 = {
     }
   },
   delete: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.ok().json({
         cowId: parseInt(data.cowId),
@@ -70,6 +88,8 @@ const controller2 = {
 
 const controller3 = {
   patch: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.ok().json({
         monkeyCode: data.monkeyCode,
@@ -81,6 +101,8 @@ const controller3 = {
 
 const controller4 = {
   patch: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.ok().json({
         monkeyCode: data.monkeyCode,
@@ -92,6 +114,8 @@ const controller4 = {
 
 const passthrough = {
   get: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       next()
     }
@@ -100,6 +124,8 @@ const passthrough = {
 
 const strictModeController = {
   get: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       console.log("If you see this, it passed through `/strict` which is NORMAL")
       next()
@@ -109,6 +135,8 @@ const strictModeController = {
 
 const strictModeController2 = {
   get: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       console.log("If you see this, it passed through `/strict/:strictId` which is BAD")
       res.ok().json({ strictId: parseInt(data.strictId) })
@@ -118,8 +146,21 @@ const strictModeController2 = {
 
 const errorController = {
   get: {
+    inputs: {},
+    errMsg: "",
     handler: (req, res, next, data) => {
       res.ok().json({ assessmentId: data.assessmentId })
+    }
+  }
+}
+
+const inputCheckingController = {
+  post: {
+    inputs: { name: "String", age: "Number" },
+    errMsg: "them weird inputs guv",
+    handler: (req, res, next, data) => {
+      const { name, age } = data
+      res.ok().json({ name, age })
     }
   }
 }
@@ -134,6 +175,8 @@ const middleware2 = (req, res, next, data) => {
 
 let runningServer = testServer
   .use(quip)
+  .use(bodyParser.urlencoded({ extended: false }))
+  .use(bodyParser.json())
   .use(middleware("/middleware/:middlewareCode/middleware1", middleware1))
   .use(middleware("/middleware/:id/middleware2/:optionalCode", middleware2))
   .use(router("/cow/:cowId/abc", controller1))
@@ -150,6 +193,7 @@ let runningServer = testServer
   .use(router("/cow/:cowId/def/", controller1))
   .use(router("/strict", strictModeController))
   .use(router("/strict/:strictId", strictModeController2, true))
+  .use(router("/input-checking", inputCheckingController))
   .use((req, res, next) => res.notFound("Help"))
   .listen(3003)
 
@@ -281,6 +325,41 @@ describe("Router and Middleware Tests", () => {
         response.statusCode.should.equal(404)
         done()
       })
+    })
+    it("should not allow missing inputs", done => {
+      request.post(`${reqHost}/input-checking`, (err, response, body) => {
+        const data = JSON.parse(body)
+        data.message.should.have.string("weird")
+        response.statusCode.should.equal(403)
+        done()
+      })
+    })
+    it("should not allow incorrect inputs", done => {
+      request.post(
+        {
+          url: `${reqHost}/input-checking`,
+          json: { name: "Pojo", age: "25" }
+        },
+        (err, response, body) => {
+          body.err.msg.should.have.string("Aileron type error")
+          response.statusCode.should.equal(403)
+          done()
+        }
+      )
+    })
+    it("should allow API if all inputs are correct", done => {
+      request.post(
+        {
+          url: `${reqHost}/input-checking`,
+          json: { name: "Pojo", age: 25 }
+        },
+        (err, response, body) => {
+          response.statusCode.should.equal(200)
+          body.name.should.equal("Pojo")
+          body.age.should.equal(25)
+          done()
+        }
+      )
     })
   })
 
