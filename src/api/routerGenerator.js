@@ -5,7 +5,7 @@ const {
   validateRoute
 } = require("../lib/index")
 
-const routerGenerator = ({ badInputHandler, serverErrorHandler, aileronStrict }) => {
+const routerGenerator = ({ errHandler, badInputHandler, aileronStrict }) => {
   return (urlFormat, controller, strict = false) => {
     const { parsedUrlFormat, urlDataKeys } = processUrlFormat(urlFormat)
     validateRoute(urlFormat, urlDataKeys, controller, aileronStrict)
@@ -53,14 +53,7 @@ const routerGenerator = ({ badInputHandler, serverErrorHandler, aileronStrict })
       }
 
       if (match) {
-        runController(
-          controller,
-          { badInputHandler, serverErrorHandler },
-          req,
-          res,
-          next,
-          data
-        )
+        runController(controller, { errHandler, badInputHandler }, req, res, next, data)
       } else {
         next()
       }

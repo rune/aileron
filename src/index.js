@@ -1,26 +1,29 @@
 const { middlewareGenerator, routerGenerator } = require("./api/index")
+const { validateTypes } = require("./lib/index")
 
-module.exports = ({ badInputHandler, serverErrorHandler, strict } = {}) => {
+module.exports = ({ errHandler, badInputHandler, strict } = {}) => {
   if (strict) {
-    if (!badInputHandler || !serverErrorHandler) {
-      throw "badInputHandler and serverErrorHandler must be specified in strict mode"
+    const typeDefinitions = { errHandler: "Function", badInputHandler: "Function" }
+    const { inputErr } = validateTypes(typeDefinitions, { errHandler, badInputHandler })
+    if (inputErr) {
+      throw `Aileron config error [strict mode]: ${inputErr.msg}`
     }
   } else {
     strict = false
     // Reduce to single function with error code
-    badInputHandler = (req, res, inputError, errMsg) => {
-      res.writeHead(400, { "Content-Type": "application/json" })
-      res.end(JSON.stringify({ err: inputError, message: errMsg }))
+    badInputHandler = (req, res, err, errMsg) => {
+      res.writeHead(409, { "Content-Type": "application/json" })
+      res.end(JSON.stringify({ err, message: errMsg }))
     }
-    serverErrorHandler = (req, res, err, errorMsg) => {
+    errHandler = (req, res, err, errMsg) => {
       res.writeHead(500, { "Content-Type": "application/json" })
-      res.end(JSON.stringify({ err: err, message: errorMsg }))
+      res.end(JSON.stringify({ err, message: errMsg }))
     }
   }
   return {
     router: routerGenerator({
+      errHandler,
       badInputHandler,
-      serverErrorHandler,
       aileronStrict: strict
     }),
     middleware: middlewareGenerator()
