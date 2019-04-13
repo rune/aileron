@@ -165,6 +165,21 @@ const inputCheckingController = {
   }
 }
 
+const timeout = ms => {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const asyncController = {
+  get: {
+    inputs: {},
+    errMsg: "async givin you trouble",
+    handler: async (req, res, next, data) => {
+      await timeout(100)
+      res.ok().json({ cookie: "You wait you get a cookie!" })
+    }
+  }
+}
+
 const middleware1 = (req, res, next, data) => {
   res.ok().json({ middlewareCode: data.middlewareCode })
 }
@@ -194,6 +209,7 @@ let runningServer = testServer
   .use(router("/strict", strictModeController))
   .use(router("/strict/:strictId", strictModeController2, true))
   .use(router("/input-checking", inputCheckingController))
+  .use(router("/async", asyncController))
   .use((req, res, next) => res.notFound("Help"))
   .listen(3003)
 
@@ -360,6 +376,14 @@ describe("Router and Middleware Tests", () => {
           done()
         }
       )
+    })
+    it("should allow async handlers", done => {
+      request.get(`${reqHost}/async`, (err, response, body) => {
+        response.statusCode.should.equal(200)
+        const data = JSON.parse(body)
+        data.cookie.should.have.string("cookie")
+        done()
+      })
     })
   })
 

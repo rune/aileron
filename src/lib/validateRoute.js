@@ -13,10 +13,11 @@ module.exports = (urlFormat, urlDataKeys, controller, aileronStrict) => {
           URL wildcards and request body inputs must all be unique`
       }
       // Handler must be supplied
-      let controllerDefinition = { handler: "Function" }
+      let controllerDefinition = { handler: "Function | AsyncFunction" }
       // If strict mode is enabled, inputs and error messages must also be supplied
       if (aileronStrict) {
-        controllerDefinition = { handler: "Function", inputs: "Object", errMsg: "String" }
+        controllerDefinition.inputs = "Object"
+        controllerDefinition.errMsg = "String"
       }
       const { inputErr } = validateTypes(controllerDefinition, sub)
       if (inputErr) {
