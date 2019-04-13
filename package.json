@@ -1,6 +1,6 @@
 {
   "name": "aileron",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "Minimal URL matching for NodeJS",
   "main": "src/index.js",
   "files": [
