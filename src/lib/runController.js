@@ -1,6 +1,7 @@
 const validateTypes = require("./validateTypes")
+const { typeCheck } = require("type-check")
 
-const runController = (
+const runController = async (
   controller,
   { errHandler, badInputHandler },
   req,
@@ -30,7 +31,13 @@ const runController = (
         }
       }
     }
-    handler(req, res, next, data)
+    // Conditionally await to allow for both sync & async functions.
+    // The await is needed for errors thrown inside an async handler() to be caught.
+    if (typeCheck("AsyncFunction", handler)) {
+      await handler(req, res, next, data)
+    } else {
+      handler(req, res, next, data)
+    }
   } catch (err) {
     errHandler(req, res, err, errMsg)
   }
