@@ -23,19 +23,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sanjaypojo/aileron.git"
+    "url": "git+https://github.com/rune/aileron.git"
   },
   "keywords": [
     "router",
     "connect",
     "NodeJS"
   ],
-  "author": "Sanjay Guruprasad <sanjayg@mit.edu> (http://sanjaypojo.com/)",
+  "author": "Sanjay Guruprasad <sanjayg@rune.ai> (http://sanjaypojo.com/)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sanjaypojo/aileron/issues"
+    "url": "https://github.com/rune/aileron/issues"
   },
-  "homepage": "https://github.com/sanjaypojo/aileron#readme",
+  "homepage": "https://github.com/rune/aileron#readme",
   "dependencies": {
     "type-check": "^0.3.2"
   }
