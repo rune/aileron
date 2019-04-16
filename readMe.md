@@ -1,6 +1,6 @@
 # Aileron
 
-[![Build Status](https://travis-ci.org/sanjaypojo/aileron.svg?branch=master)](https://travis-ci.org/sanjaypojo/aileron)
+[![Build Status](https://travis-ci.org/rune/aileron.svg?branch=master)](https://travis-ci.org/rune/aileron.svg?branch=master)
 
 URL parsing, routing and input checks for NodeJS APIs. Designed as a middleware for connect. Matches URLs to paths, supports `:wildcards` (useful for IDs in REST APIs) and specifies request types for an endpoint (GET, POST, PUT, PATCH, DELETE). Also allows you to specify type checks for inputs and automatically throw errors for incorrect inputs. I use this extensively when creating API servers.
 
