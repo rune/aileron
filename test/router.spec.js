@@ -174,8 +174,18 @@ const asyncController = {
     inputs: {},
     errMsg: "async givin you trouble",
     handler: async (req, res, next, data) => {
-      await timeout(100)
+      await timeout(25)
       res.ok().json({ cookie: "You wait you get a cookie!" })
+    }
+  },
+  post: {
+    inputs: { throw: "Boolean", throwText: "String" },
+    errMsg: "async throws be tricky",
+    handler: async (req, res, next, data) => {
+      if (data.throw) {
+        throw data.throwText
+      }
+      res.ok().json({ noPotato: true })
     }
   }
 }
@@ -384,6 +394,20 @@ describe("Router and Middleware Tests", () => {
         data.cookie.should.have.string("cookie")
         done()
       })
+    })
+    it("should catch errors thrown in async handlers", done => {
+      request.post(
+        {
+          url: `${reqHost}/async`,
+          json: { throw: true, throwText: "Potato" }
+        },
+        (err, response, body) => {
+          response.statusCode.should.equal(500)
+          body.err.should.equal("Potato")
+          body.message.should.equal("Yo")
+          done()
+        }
+      )
     })
   })
 
