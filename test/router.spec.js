@@ -162,6 +162,19 @@ const inputCheckingController = {
       const { name, age } = data
       res.ok().json({ name, age })
     }
+  },
+  put: {
+    inputs: { name: "String", age: "Number" },
+    inputCheck: parsedInputs => {
+      if (parsedInputs.name === "Jon Snow") {
+        throw "You know nothing, Jon Snow"
+      }
+    },
+    errMsg: "them weird inputs guv",
+    handler: (req, res, next, data) => {
+      const { name, age } = data
+      res.ok().json({ name, age })
+    }
   }
 }
 
@@ -369,6 +382,34 @@ describe("Router and Middleware Tests", () => {
         (err, response, body) => {
           body.err.msg.should.have.string("Aileron type error")
           response.statusCode.should.equal(403)
+          done()
+        }
+      )
+    })
+    it("should not allow inputs that inputCheck throws", done => {
+      request.put(
+        {
+          url: `${reqHost}/input-checking`,
+          json: { name: "Jon Snow", age: 25 }
+        },
+        (err, response, body) => {
+          body.message.should.have.string("them weird inputs guv")
+          body.err.should.have.string("You know nothing, Jon Snow")
+          response.statusCode.should.equal(403)
+          done()
+        }
+      )
+    })
+    it("should allow APIs where inputs and inputCheck succeed", done => {
+      request.put(
+        {
+          url: `${reqHost}/input-checking`,
+          json: { name: "Pojo", age: 25 }
+        },
+        (err, response, body) => {
+          response.statusCode.should.equal(200)
+          body.name.should.equal("Pojo")
+          body.age.should.equal(25)
           done()
         }
       )

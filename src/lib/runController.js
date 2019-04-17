@@ -17,18 +17,27 @@ const runController = async (
     return
   }
 
-  const { handler, inputs, errMsg } = controller[requestMethod]
+  const { handler, inputs, errMsg, inputCheck } = controller[requestMethod]
 
   try {
+    // If input type definitions are supplied, check them
     if (inputs) {
       const { parsedInputs, inputErr } = validateTypes(inputs, req.body)
       if (inputErr) {
         badInputHandler(req, res, inputErr, errMsg)
         return
-      } else {
-        for (const key in parsedInputs) {
-          data[key] = parsedInputs[key]
+      }
+      // If a custom inputCheck is supplied, run the checks
+      if (inputCheck) {
+        try {
+          inputCheck(parsedInputs)
+        } catch (err) {
+          badInputHandler(req, res, err, errMsg)
+          return
         }
+      }
+      for (const key in parsedInputs) {
+        data[key] = parsedInputs[key]
       }
     }
     // Conditionally await to allow for both sync & async functions.

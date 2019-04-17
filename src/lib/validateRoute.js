@@ -13,7 +13,12 @@ module.exports = (urlFormat, urlDataKeys, controller, aileronStrict) => {
           URL wildcards and request body inputs must all be unique`
       }
       // Handler must be supplied
-      let controllerDefinition = { handler: "Function | AsyncFunction" }
+      let controllerDefinition = {
+        handler: "Function | AsyncFunction",
+        inputs: "Object | Undefined",
+        errMsg: "String |  Undefined",
+        inputCheck: "Function | Undefined"
+      }
       // If strict mode is enabled, inputs and error messages must also be supplied
       if (aileronStrict) {
         controllerDefinition.inputs = "Object"
