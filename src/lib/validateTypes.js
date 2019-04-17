@@ -4,7 +4,9 @@ const validateTypes = (typeDefinitions, receivedInputs = {}) => {
   try {
     let parsedInputs = {}
     for (const inputName in typeDefinitions) {
-      if (typeCheck(typeDefinitions[inputName], receivedInputs[inputName])) {
+      // Automatically convert "?" to "| Undefined"
+      const typeDefinition = typeDefinitions[inputName].replace("?", "| Undefined")
+      if (typeCheck(typeDefinition, receivedInputs[inputName])) {
         parsedInputs[inputName] = receivedInputs[inputName]
       } else {
         return {

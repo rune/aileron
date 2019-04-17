@@ -175,6 +175,13 @@ const inputCheckingController = {
       const { name, age } = data
       res.ok().json({ name, age })
     }
+  },
+  patch: {
+    inputs: { age: "Number?" },
+    errMsg: "them optional inputs guv",
+    handler: (req, res, next, data) => {
+      res.ok().json({ age: data.age || "No age specified" })
+    }
   }
 }
 
@@ -424,6 +431,45 @@ describe("Router and Middleware Tests", () => {
           response.statusCode.should.equal(200)
           body.name.should.equal("Pojo")
           body.age.should.equal(25)
+          done()
+        }
+      )
+    })
+    it("should reject optional inputs with incorrect types", done => {
+      request.patch(
+        {
+          url: `${reqHost}/input-checking`,
+          json: { age: "25" }
+        },
+        (err, response, body) => {
+          body.err.msg.should.have.string("Aileron type error")
+          response.statusCode.should.equal(403)
+          done()
+        }
+      )
+    })
+    it("should allow optional inputs with correct types", done => {
+      request.patch(
+        {
+          url: `${reqHost}/input-checking`,
+          json: { age: 42 }
+        },
+        (err, response, body) => {
+          response.statusCode.should.equal(200)
+          body.age.should.equal(42)
+          done()
+        }
+      )
+    })
+    it("should allow undefined inputs when marked optional", done => {
+      request.patch(
+        {
+          url: `${reqHost}/input-checking`,
+          json: {}
+        },
+        (err, response, body) => {
+          response.statusCode.should.equal(200)
+          body.age.should.equal("No age specified")
           done()
         }
       )
