@@ -112,7 +112,7 @@ router(urlFormat, routeConfig)
 - Each handler receives `(req, res, next, data)`
 - If the URL exactly matches the `urlFormat`, the handler for the corresponding `req.method` is called.
 - If the matching fails, `next()` is called.
-- Each route allows you to specify the `inputs` it receives and their types. If inputs are missing / incorrect, aileron will automatically respond with an error (409).
+- Each route allows you to specify the `inputs` it receives and their types. If inputs are missing / incorrect, aileron will automatically invoke `badInputHandler` with a detailed error object. For advanced input validation, see the `Input Checking` section.
 - Each handler function is passed a `data` parameter. This will contain the wildcard values and the parsed inputs, ready for use.
 
 For example:
@@ -151,6 +151,26 @@ app
 
 - As mentioned above, aileron supports input checking by simply configuring an "inputs" object and an error message.
 - Aileron uses the [type-check](https://www.npmjs.com/package/type-check) library to validate inputs. Check the library docs for a list of valid type definitions.
+- For advanced input checking, aileron allows you to define an `inputCheck` function. This function receives all the parsed inputs specified in your `inputs` object. Simply throw an error inside this function and `badInputHandler` will be called with the thrown error.
+
+```javascript
+const inputCheckingController = {
+  post: {
+    inputs: { name: "String", age: "Number" },
+    inputCheck: parsedInputs => {
+      // Custom check to disallow the name "Jon Snow"
+      if (parsedInputs.name === "Jon Snow") {
+        throw "You know nothing, Jon Snow"
+      }
+    },
+    errMsg: "Unable to process your request.",
+    handler: (req, res, next, data) => {
+      const { name, age } = data
+      res.ok().json({ name, age })
+    }
+  }
+}
+```
 
 ## Error handling
 
