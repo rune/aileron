@@ -152,6 +152,7 @@ app
 - As mentioned above, aileron supports input checking by simply configuring an "inputs" object and an error message.
 - Aileron uses the [type-check](https://www.npmjs.com/package/type-check) library to validate inputs. Check the library docs for a list of valid type definitions.
 - For advanced input checking, aileron allows you to define an `inputCheck` function. This function receives all the parsed inputs specified in your `inputs` object. Simply throw an error inside this function and `badInputHandler` will be called with the thrown error.
+- For optional inputs, you can use `?` to specify they're optional. `{age: "Number | Undefined"}` can be written as `{age: "Number?"}`
 
 ```javascript
 const inputCheckingController = {
