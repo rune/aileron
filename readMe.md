@@ -43,7 +43,7 @@ const authMiddleware = (req, res, next, data) => {
   if (isAuthorized(req)) {
     next()
   } else {
-    res.send("Unauthorized")
+    throw "Unauthorized"
   }
 }
 
@@ -175,7 +175,7 @@ const inputCheckingController = {
 
 ## Error handling
 
-- Aileron automatically wraps all your handlers in a try-catch block and sends an error response if an uncaught error occurs.
+- Aileron automatically wraps all your middlewares / handlers in a try-catch block and sends an error response if an uncaught error occurs.
 - This prevents your node server from crashing :)
 - Aileron allows you customize these error handlers.
 - You can supply an `errHandler` and a `badInputHandler` when you initialize Aileron.
