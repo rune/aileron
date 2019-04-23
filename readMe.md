@@ -2,48 +2,56 @@
 
 [![Build Status](https://travis-ci.org/rune/aileron.svg?branch=master)](https://travis-ci.org/rune/aileron.svg?branch=master)
 
-URL parsing, routing and input checks for NodeJS APIs. Designed as a middleware for connect. Matches URLs to paths, supports `:wildcards` (useful for IDs in REST APIs) and specifies request types for an endpoint (GET, POST, PUT, PATCH, DELETE). Also allows you to specify type checks for inputs and automatically throw errors for incorrect inputs. I use this extensively when creating API servers.
+Aileron simplifies an API server to these steps:
 
-- Use `router` when specifying an exact route.
-- Use `middleware` when you only want to match against the beginning of the URL, rather than exact matches.
-- Both support `:wildcards` for variables in the URL.
+- The connect server maps `URL pattern` strings to `handler` functions.
+- If the `handler` returns a value (typically a JSON object), this is sent as a 200 response.
+- If the `handler` throws an error, this is sent as a 500 response.
+
+Additional features:
+
+- `URL pattern` strings support `:wildcards`, which are useful for specifying IDs in the URL string for example.
+- You can specify different `handler` functions for different request methods (GET, POST, PUT, PATCH, DELETE).
+- You can customize the centralized `successHandler` and `errHandler` functions to perform tasks like logging, specifying different status codes etc.
+- You can specify type definitions for `inputs` to APIs. Aileron will check requests and reject incorrect inputs with a 409 response. This response can also be customized through a centralized `badInputHandler` function.
+
+Middlewares:
+
+- For tasks like authentication, we require a way to create a "gatekeeper" functions, that allow only some requests through.
+- For this, aileron allows you to define a `middleware`.
+- Middleware are different from normal routes in two ways:
+  - You can use `middleware` when you only want to match against the beginning of the URL, rather than exact matches.
+  - When a middleware `handler` function returns, we don't send a response, we call `next()`, sending the request forward along the connect server chain.
 
 ## Typical Use
 
 ```javascript
 const connect = require("connect")
 const aileron = require("aileron")
-const queryDb = require("magical-db-query-lib")
 
 const { router, middleware } = aileron()
 
-const teamApi = {
+const teamDetails = {
   get: {
-    handler: (req, res, next, data) => {
-      if (data.teamId) {
-        res.send(teamDetails(data.teamId))
-      } else {
-        res.send(teamList())
-      }
+    errMsg: "Unable to retrieve team details"
+    handler: async (req, data) => {
+      const teamDetails = await getTeamDetails(data.teamId)
+      return { id: data.teamId, teamDetails }
     }
   },
   put: {
-    handler: async (req, res, next, data) => {
-      try {
-        const result = await updateTeamDetails(data.teamId)
-        res.send(result)
-      } catch (err) {
-        res.send(err)
-      }
+    errMsg: "Unable to update team details"
+    handler: async (req, data) => {
+      const result = await updateTeamDetails(data.teamId, data.teamList)
+      return result
     }
   }
 }
 
-const authMiddleware = (req, res, next, data) => {
-  if (isAuthorized(req)) {
-    next()
-  } else {
-    throw "Unauthorized"
+const authMiddleware = {
+  errMsg: "Unauthorized request",
+  handler: (req, data) => {
+    const isAuthorized = await authorize(req)
   }
 }
 
@@ -51,39 +59,8 @@ let app = connect()
 
 app
   .use(middleware("/api/:apiVersion"), authMiddleware)
-  .use(router("/api/:apiVersion/team/:teamId", teamApi))
+  .use(router("/api/:apiVersion/team/:teamId", teamDetails))
 ```
-
-## Middleware
-
-```javascript
-middleware(urlFormat, middlewareFunction)
-```
-
-- `urlFormat` is a string URL, where you can have `:wildcard` placeholders by prefixing a `:`
-- `middlewareFunction` is a function that receives `(req, res, next, data)`.
-- If the beginning of the URL matches the provided `urlFormat`, the middleware function is called.
-- If the matching fails, `next()` is called.
-- The middleware function is passed a `data` parameter, containing the wildcard values.
-
-For example:
-
-```javascript
-const printRequestInfo = (req, res, next, data) => {
-  console.log(req.method, req.url, data.apiVersion)
-  next()
-}
-
-let app = connect()
-
-app
-  .use(middleware("/api/:apiVersion", printVersionNumber))
-  // other middleware / routes follow
-  .use(...)
-  .use(...)
-```
-
-- Note that the URL format that you provide decides the key (`apiVersion`) under which the variable is made available to the middleware function.
 
 ## Router
 
@@ -96,20 +73,23 @@ router(urlFormat, routeConfig)
   // urlFormatExample
   "/api/:apiVersion/authenticate"
   ```
-- `routeConfig` is an object containing a middleware function for each supported request method.
+- `routeConfig` is an object containing a handler for each supported request method.
   ```javascript
   // route config example
   const routeConfig = {
-    post: {
-      inputs: { username: "String", password: "String" },
-      errMsg: "Unable to login. Please try again!",
-      handler: (req, res, next, data) => {
-        // Log user in and send a response!
+    post: // Request method
+      {
+        inputs: // Input type definitions,
+        errMsg: // Error message string,
+        handler: (req, data) => {
+          // Function that returns a value.
+          // Returned value is passed to the successHandler which sends a response
+          // If an err is thrown, it is passed errHandler which sends a response
+        }
       }
-    }
   }
   ```
-- Each handler receives `(req, res, next, data)`
+- Each handler receives `(req, data)`
 - If the URL exactly matches the `urlFormat`, the handler for the corresponding `req.method` is called.
 - If the matching fails, `next()` is called.
 - Each route allows you to specify the `inputs` it receives and their types. If inputs are missing / incorrect, aileron will automatically invoke `badInputHandler` with a detailed error object. For advanced input validation, see the `Input Checking` section.
@@ -122,12 +102,9 @@ const loginApi = {
   post: {
     inputs: { username: "String", password: "String" },
     errMsg: "Unable to login. Please try again!",
-    handler: (req, res, next, data) => {
-      if (data.apiVersion === "v2") {
-        res.send(loginUser(data.username, data.password))
-      } else {
-        res.send({err: "Legacy API is deprecated. Upgrade to v2"})
-      }
+    handler: async (req, data) => {
+      const userDetails = await loginUser(data.username, data.password, data.apiVersion)
+      return {message: "Login successful", userDetails}
     }
   }
 }
@@ -141,6 +118,36 @@ app
   // The team route
   .use(router("/api/:apiVersion/team/:teamId", teamApi))
   // Other routes and middleware
+  .use(...)
+  .use(...)
+```
+
+- Note that the URL format that you provide decides the key (`apiVersion`) under which the variable is made available to the handler function.
+
+## Middleware
+
+```javascript
+middleware(urlFormat, routeConfig)
+```
+
+Very similar to router, so we only explain the differences:
+
+- If the beginning of the URL matches the provided `urlFormat`, the middleware function is called.
+- If the `handler` function returns, `next()` is called.
+- If the `handler` function throws, the `errHandler` is called.
+
+For example:
+
+```javascript
+const printRequestInfo = (req, data) => {
+  console.log(req.method, req.url, data.apiVersion)
+}
+
+let app = connect()
+
+app
+  .use(middleware("/api/:apiVersion", printVersionNumber))
+  // other middleware / routes follow
   .use(...)
   .use(...)
 ```
