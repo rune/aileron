@@ -5,10 +5,15 @@ const {
   validateRoute
 } = require("../lib/index")
 
-const routerGenerator = ({ errHandler, badInputHandler, aileronStrict }) => {
+const routerGenerator = ({
+  errHandler,
+  badInputHandler,
+  successHandler,
+  aileronStrict
+}) => {
   return (urlFormat, controller, strict = false) => {
     const { parsedUrlFormat, urlDataKeys } = processUrlFormat(urlFormat)
-    validateRoute(urlFormat, urlDataKeys, controller, aileronStrict)
+    validateRoute(urlFormat, urlDataKeys, controller, aileronStrict, true)
     let routerMiddleware = (req, res, next) => {
       let match = true
       let data = {}
@@ -53,7 +58,15 @@ const routerGenerator = ({ errHandler, badInputHandler, aileronStrict }) => {
       }
 
       if (match) {
-        runController(controller, { errHandler, badInputHandler }, req, res, next, data)
+        runController(
+          controller,
+          { errHandler, badInputHandler, successHandler },
+          req,
+          res,
+          next,
+          data,
+          true
+        )
       } else {
         next()
       }

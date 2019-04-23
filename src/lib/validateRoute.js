@@ -1,9 +1,16 @@
 const validateTypes = require("./validateTypes")
 
-module.exports = (urlFormat, urlDataKeys, controller, aileronStrict) => {
+module.exports = (urlFormat, urlDataKeys, controller, aileronStrict, isRouter) => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
-    for (const method in controller) {
-      const sub = controller[method]
+    let controllerObject
+    if (isRouter) {
+      controllerObject = controller
+    } else {
+      // We don't have separate middlewares for different request methods
+      controllerObject = { middleware: controller }
+    }
+    for (const method in controllerObject) {
+      const sub = controllerObject[method]
       // url data keys cannot match input keys
       const inputKeys = sub.inputs || []
       const allKeys = urlDataKeys.concat(inputKeys)

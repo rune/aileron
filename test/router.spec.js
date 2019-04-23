@@ -10,7 +10,10 @@ const { router, middleware } = aileron({
   strict: true,
   badInputHandler: (req, res, err, errMsg) =>
     res.forbidden().json({ err, message: errMsg }),
-  errHandler: (req, res, err, errMsg) => res.error().json({ err, message: "Yo" })
+  errHandler: (req, res, err, errMsg) => res.error().json({ err, message: "Yo" }),
+  successHandler: (req, res, payload) => {
+    res.ok().json(payload)
+  }
 })
 
 // Create a temporary server for tests
@@ -20,8 +23,8 @@ const controller1 = {
   get: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.json({ cowId: parseInt(data.cowId) })
+    handler: (req, data) => {
+      return { cowId: parseInt(data.cowId) }
     }
   }
 }
@@ -30,58 +33,58 @@ const controller2 = {
   get: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
+    handler: (req, data) => {
       if (data.complexId) {
-        res.ok().json({
+        return {
           cowId: parseInt(data.cowId),
           complexId: parseInt(data.complexId)
-        })
+        }
       } else {
-        res.ok().json({
+        return {
           cowId: parseInt(data.cowId),
           complexId: 365
-        })
+        }
       }
     }
   },
   post: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.ok().json({
+    handler: (req, data) => {
+      return {
         cowId: parseInt(data.cowId),
         complexId: parseInt(data.complexId) + 1
-      })
+      }
     }
   },
   patch: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.ok().json({
+    handler: (req, data) => {
+      return {
         cowId: parseInt(data.cowId),
         complexId: parseInt(data.complexId) + 2
-      })
+      }
     }
   },
   put: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.ok().json({
+    handler: (req, data) => {
+      return {
         cowId: parseInt(data.cowId),
         complexId: parseInt(data.complexId) + 3
-      })
+      }
     }
   },
   delete: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.ok().json({
+    handler: (req, data) => {
+      return {
         cowId: parseInt(data.cowId),
         complexId: parseInt(data.complexId) + 4
-      })
+      }
     }
   }
 }
@@ -90,11 +93,11 @@ const controller3 = {
   patch: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.ok().json({
+    handler: (req, data) => {
+      return {
         monkeyCode: data.monkeyCode,
         complexId: parseInt(data.complexId) + 4
-      })
+      }
     }
   }
 }
@@ -103,22 +106,19 @@ const controller4 = {
   patch: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.ok().json({
+    handler: (req, data) => {
+      return {
         monkeyCode: data.monkeyCode,
         complexId: parseInt(data.complexId) + 6
-      })
+      }
     }
   }
 }
 
 const passthrough = {
-  get: {
-    inputs: {},
-    errMsg: "",
-    handler: (req, res, next, data) => {
-      next()
-    }
+  errMsg: "passthrough error",
+  handler: (req, data) => {
+    return
   }
 }
 
@@ -126,20 +126,8 @@ const strictModeController = {
   get: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      console.log("If you see this, it passed through `/strict` which is NORMAL")
-      next()
-    }
-  }
-}
-
-const strictModeController2 = {
-  get: {
-    inputs: {},
-    errMsg: "",
-    handler: (req, res, next, data) => {
-      console.log("If you see this, it passed through `/strict/:strictId` which is BAD")
-      res.ok().json({ strictId: parseInt(data.strictId) })
+    handler: (req, data) => {
+      return { strictId: parseInt(data.strictId) }
     }
   }
 }
@@ -148,8 +136,8 @@ const errorController = {
   get: {
     inputs: {},
     errMsg: "",
-    handler: (req, res, next, data) => {
-      res.ok().json({ assessmentId: data.assessmentId })
+    handler: (req, data) => {
+      return { assessmentId: data.assessmentId }
     }
   }
 }
@@ -158,9 +146,9 @@ const inputCheckingController = {
   post: {
     inputs: { name: "String", age: "Number" },
     errMsg: "them weird inputs guv",
-    handler: (req, res, next, data) => {
+    handler: (req, data) => {
       const { name, age } = data
-      res.ok().json({ name, age })
+      return { name, age }
     }
   },
   put: {
@@ -171,16 +159,16 @@ const inputCheckingController = {
       }
     },
     errMsg: "them weird inputs guv",
-    handler: (req, res, next, data) => {
+    handler: (req, data) => {
       const { name, age } = data
-      res.ok().json({ name, age })
+      return { name, age }
     }
   },
   patch: {
     inputs: { age: "Number?" },
     errMsg: "them optional inputs guv",
-    handler: (req, res, next, data) => {
-      res.ok().json({ age: data.age || "No age specified" })
+    handler: (req, data) => {
+      return { age: data.age || "No age specified" }
     }
   }
 }
@@ -193,40 +181,67 @@ const asyncController = {
   get: {
     inputs: {},
     errMsg: "async givin you trouble",
-    handler: async (req, res, next, data) => {
+    handler: async (req, data) => {
       await timeout(25)
-      res.ok().json({ cookie: "You wait you get a cookie!" })
+      return { cookie: "You wait you get a cookie!" }
     }
   },
   post: {
     inputs: { throw: "Boolean", throwText: "String" },
     errMsg: "async throws be tricky",
-    handler: async (req, res, next, data) => {
+    handler: async (req, data) => {
       if (data.throw) {
         throw data.throwText
       }
-      res.ok().json({ noPotato: true })
+      return { noPotato: true }
     }
   }
 }
 
-const middleware1 = (req, res, next, data) => {
-  if (data.middlewareCode !== "avo") {
-    throw "Not hipster."
+const middleware1 = {
+  errMsg: "Avo4Lyf",
+  handler: (req, data) => {
+    if (data.middlewareCode !== "avo") {
+      throw "Not hipster."
+    } else {
+      req.middlewareData = { middlewareCode: data.middlewareCode }
+    }
   }
-  res.ok().json({ middlewareCode: data.middlewareCode })
 }
 
-const middleware2 = (req, res, next, data) => {
-  res.ok().json({ optionalCode: data.optionalCode })
+const middleware2 = {
+  errMsg: "Optionality",
+  handler: (req, data) => {
+    req.middlewareData = { optionalCode: data.optionalCode }
+  }
 }
 
-const middlewareAsync = async (req, res, next, data) => {
-  await timeout(25)
-  if (data.music !== "jazz") {
-    throw "Not classy."
-  } else {
-    res.ok().json({ jazz: true })
+const middlewareAsync = {
+  errMsg: "Async Middleware is Broken",
+  handler: async (req, data) => {
+    await timeout(25)
+    if (data.music === "pop") {
+      throw "Not classy."
+    } else {
+      req.middlewareData = { music: data.music }
+    }
+  }
+}
+
+const routerForMiddlewareTests = {
+  get: {
+    errMsg: "routerForMiddlewareTests",
+    inputs: {},
+    handler: (req, data) => {
+      return req.middlewareData
+    }
+  },
+  post: {
+    errMsg: "routerForMiddlewareTests",
+    inputs: {},
+    handler: (req, data) => {
+      return req.middlewareData
+    }
   }
 }
 
@@ -237,8 +252,27 @@ let runningServer = testServer
   .use(middleware("/middleware/:middlewareCode/middleware1", middleware1))
   .use(middleware("/middleware/:id/middleware2/:optionalCode", middleware2))
   .use(middleware("/middleware/:id/middlewareAsync/:music", middlewareAsync))
+  .use(
+    router(
+      "/middleware/:id/middleware1/:routerCode/paths/allowed/here",
+      routerForMiddlewareTests
+    )
+  )
+  .use(
+    router(
+      "/middleware/:id/middleware2/:routerCode/paths/allowed/here",
+      routerForMiddlewareTests
+    )
+  )
+  .use(
+    router(
+      "/middleware/:id/middlewareAsync/:routerCode/paths/allowed/here",
+      routerForMiddlewareTests
+    )
+  )
+  .use(router("/middleware/:id/middleware2", routerForMiddlewareTests))
   .use(router("/cow/:cowId/abc", controller1))
-  .use(router("/app/assessments/:assessmentId", passthrough))
+  .use(middleware("/app/assessments/:assessmentId", passthrough))
   .use(
     router(
       "/app/assessments/:assessmentId/respondents/:respondentId/questionnaire",
@@ -249,8 +283,7 @@ let runningServer = testServer
   .use(router("/cow/:cowId/complex/:complexId", controller2))
   .use(router("/monkey/:monkeyCode/complex/:complexId/abc", controller4))
   .use(router("/cow/:cowId/def/", controller1))
-  .use(router("/strict", strictModeController))
-  .use(router("/strict/:strictId", strictModeController2, true))
+  .use(router("/strict/:strictId", strictModeController, true))
   .use(router("/input-checking", inputCheckingController))
   .use(router("/async", asyncController))
   .use((req, res, next) => res.notFound("Help"))
@@ -558,8 +591,8 @@ describe("Router and Middleware Tests", () => {
         `${reqHost}/middleware/avo/middlewareAsync/jazz/paths/allowed/here`,
         (err, response, body) => {
           response.statusCode.should.equal(200)
-          const { jazz } = JSON.parse(body)
-          should.exist(jazz)
+          const data = JSON.parse(body)
+          data.music.should.equal("jazz")
           done()
         }
       )
