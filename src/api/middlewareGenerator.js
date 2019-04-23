@@ -1,12 +1,12 @@
-const { processUrlFormat, processUrl } = require("../lib/index")
+const { processUrlFormat, processUrl, runMiddleware } = require("../lib/index")
 
 // Middleware that can process wildcards
-const middlewareGenerator = () => {
+const middlewareGenerator = ({ errHandler }) => {
   // aileron options are not currently used in the middleware
   return (urlFormat, middlewareFunction) => {
     const { parsedUrlFormat } = processUrlFormat(urlFormat)
 
-    let routerMiddleware = (req, res, next) => {
+    let routerMiddleware = async (req, res, next) => {
       let data = {}
       const cleanUrlArray = processUrl(req.url)
 
@@ -44,7 +44,7 @@ const middlewareGenerator = () => {
         index += 1
       }
 
-      middlewareFunction(req, res, next, data)
+      runMiddleware(middlewareFunction, errHandler, req, res, next, data)
     }
 
     return routerMiddleware

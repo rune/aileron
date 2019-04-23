@@ -211,11 +211,23 @@ const asyncController = {
 }
 
 const middleware1 = (req, res, next, data) => {
+  if (data.middlewareCode !== "avo") {
+    throw "Not hipster."
+  }
   res.ok().json({ middlewareCode: data.middlewareCode })
 }
 
 const middleware2 = (req, res, next, data) => {
   res.ok().json({ optionalCode: data.optionalCode })
+}
+
+const middlewareAsync = async (req, res, next, data) => {
+  await timeout(25)
+  if (data.music !== "jazz") {
+    throw "Not classy."
+  } else {
+    res.ok().json({ jazz: true })
+  }
 }
 
 let runningServer = testServer
@@ -224,6 +236,7 @@ let runningServer = testServer
   .use(bodyParser.json())
   .use(middleware("/middleware/:middlewareCode/middleware1", middleware1))
   .use(middleware("/middleware/:id/middleware2/:optionalCode", middleware2))
+  .use(middleware("/middleware/:id/middlewareAsync/:music", middlewareAsync))
   .use(router("/cow/:cowId/abc", controller1))
   .use(router("/app/assessments/:assessmentId", passthrough))
   .use(
@@ -501,18 +514,29 @@ describe("Router and Middleware Tests", () => {
   describe("Middleware", () => {
     it("should work for partial matches", done => {
       request.post(
-        `${reqHost}/middleware/77/middleware1/any/paths/allowed/here`,
+        `${reqHost}/middleware/avo/middleware1/any/paths/allowed/here`,
         (err, response, body) => {
           response.statusCode.should.equal(200)
           const data = JSON.parse(body)
-          data.middlewareCode.should.equal("77")
+          data.middlewareCode.should.equal("avo")
+          done()
+        }
+      )
+    })
+    it("should catch errors and send them through the errorHandler", done => {
+      request.get(
+        `${reqHost}/middleware/orange/middleware1/orange/paths/allowed/here`,
+        (err, response, body) => {
+          response.statusCode.should.equal(500)
+          const data = JSON.parse(body)
+          data.err.should.equal("Not hipster.")
           done()
         }
       )
     })
     it("should work for partial matches with an ID at the end", done => {
       request.post(
-        `${reqHost}/middleware/77/middleware2/12/paths/allowed/here`,
+        `${reqHost}/middleware/avo/middleware2/12/paths/allowed/here`,
         (err, response, body) => {
           response.statusCode.should.equal(200)
           const data = JSON.parse(body)
@@ -522,12 +546,34 @@ describe("Router and Middleware Tests", () => {
       )
     })
     it("should work for partial matches with missing ID at the end", done => {
-      request.post(`${reqHost}/middleware/77/middleware2`, (err, response, body) => {
+      request.post(`${reqHost}/middleware/avo/middleware2`, (err, response, body) => {
         response.statusCode.should.equal(200)
         const data = JSON.parse(body)
         should.not.exist(data.optionalCode)
         done()
       })
+    })
+    it("should work for async middleware matches", done => {
+      request.post(
+        `${reqHost}/middleware/avo/middlewareAsync/jazz/paths/allowed/here`,
+        (err, response, body) => {
+          response.statusCode.should.equal(200)
+          const { jazz } = JSON.parse(body)
+          should.exist(jazz)
+          done()
+        }
+      )
+    })
+    it("should catch async errors and send them through the errorHandler", done => {
+      request.get(
+        `${reqHost}/middleware/orange/middlewareAsync/pop/paths/allowed/here`,
+        (err, response, body) => {
+          response.statusCode.should.equal(500)
+          const data = JSON.parse(body)
+          data.err.should.equal("Not classy.")
+          done()
+        }
+      )
     })
   })
 })

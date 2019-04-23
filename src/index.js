@@ -26,6 +26,6 @@ module.exports = ({ errHandler, badInputHandler, strict } = {}) => {
       badInputHandler,
       aileronStrict: strict
     }),
-    middleware: middlewareGenerator()
+    middleware: middlewareGenerator({ errHandler })
   }
 }
