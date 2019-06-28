@@ -34,7 +34,11 @@ const runHandler = async (
     if (inputs) {
       const { parsedInputs, inputErr } = validateTypes(inputs, req.body)
       if (inputErr) {
-        badInputHandler(req, res, inputErr, errMsg)
+        if (typeCheck("AsyncFunction", successHandler)) {
+          await badInputHandler(req, res, inputErr, errMsg)
+        } else {
+          badInputHandler(req, res, inputErr, errMsg)
+        }
         return
       }
       // If a custom inputCheck is supplied, run the checks
@@ -42,7 +46,11 @@ const runHandler = async (
         try {
           inputCheck(parsedInputs)
         } catch (err) {
-          badInputHandler(req, res, err, errMsg)
+          if (typeCheck("AsyncFunction", successHandler)) {
+            await badInputHandler(req, res, err, errMsg)
+          } else {
+            badInputHandler(req, res, err, errMsg)
+          }
           return
         }
       }
@@ -62,13 +70,21 @@ const runHandler = async (
 
     if (isRouter) {
       // For routers, we run the successHandler with the payload
-      successHandler(req, res, payload)
+      if (typeCheck("AsyncFunction", successHandler)) {
+        await successHandler(req, res, payload)
+      } else {
+        successHandler(req, res, payload)
+      }
     } else {
       // For middleware, on success, we simply run next()
       next()
     }
   } catch (err) {
-    errHandler(req, res, err, errMsg)
+    if (typeCheck("AsyncFunction", successHandler)) {
+      await errHandler(req, res, err, errMsg)
+    } else {
+      errHandler(req, res, err, errMsg)
+    }
   }
 }
 

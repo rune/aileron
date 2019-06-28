@@ -4,9 +4,9 @@ const { validateTypes } = require("./lib/index")
 module.exports = ({ errHandler, badInputHandler, successHandler, strict } = {}) => {
   if (strict) {
     const typeDefinitions = {
-      errHandler: "Function",
-      badInputHandler: "Function",
-      successHandler: "Function"
+      errHandler: "Function | AsyncFunction",
+      badInputHandler: "Function | AsyncFunction",
+      successHandler: "Function | AsyncFunction"
     }
     const { inputErr } = validateTypes(typeDefinitions, {
       errHandler,
