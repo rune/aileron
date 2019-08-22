@@ -5,16 +5,14 @@ const validateTypes = (typeDefinitions, receivedInputs = {}) => {
     let parsedInputs = {}
     for (const inputName in typeDefinitions) {
       // Automatically convert "?" to "| Undefined"
-      const typeDefinition = typeDefinitions[inputName].replace("?", "| Undefined")
+      const typeDefinition = typeDefinitions[inputName].replace("?", "| Undefined | Null")
       if (typeCheck(typeDefinition, receivedInputs[inputName])) {
         parsedInputs[inputName] = receivedInputs[inputName]
       } else {
         return {
           inputErr: {
             err: { [inputName]: receivedInputs[inputName] },
-            msg: `Aileron type error: "${inputName}" of type ${
-              typeDefinitions[inputName]
-            } should be provided. Received "${receivedInputs[inputName]}" instead.`
+            msg: `Aileron type error: "${inputName}" of type ${typeDefinitions[inputName]} should be provided. Received "${receivedInputs[inputName]}" instead.`
           }
         }
       }
