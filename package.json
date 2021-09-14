@@ -10,13 +10,13 @@
     "test": "test"
   },
   "devDependencies": {
-    "body-parser": "1.18.3",
-    "chai": "4.2.0",
-    "connect": "3.6.6",
-    "eslint": "5.16.0",
-    "mocha": "6.1.2",
-    "quip": "0.1.2",
-    "request": "2.88.0"
+    "body-parser": "1.19.0",
+    "chai": "4.3.4",
+    "connect": "3.7.0",
+    "eslint": "7.32.0",
+    "mocha": "9.1.1",
+    "quip": "0.2.0",
+    "request": "2.88.2"
   },
   "scripts": {
     "test": "NODE_ENV=test mocha --reporter spec"
@@ -37,6 +37,6 @@
   },
   "homepage": "https://github.com/rune/aileron#readme",
   "dependencies": {
-    "type-check": "^0.3.2"
+    "type-check": "^0.4.0"
   }
 }
